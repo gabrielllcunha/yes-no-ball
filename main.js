@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 const TEXTURE_SIZE = 512;
 const SPHERE_RADIUS = 1.2;
-const ANIM_DURATION_MS = 520;
+const ANIM_DURATION_MS = 500;
 const BOUNCE_DURATION_MS = 380;
 const HOVER_SCALE = 1.08;
 const BASE_SCALE = 1;
@@ -47,6 +47,17 @@ function updateColorMap(sphereColorHex, result) {
   const hex = sphereColorHex != null ? sphereColorHex : THEMES.idle.sphere;
   ctx.fillStyle = '#' + hex.toString(16).padStart(6, '0');
   ctx.fillRect(0, 0, w, h);
+  if (!result) {
+    const r = ((hex >> 16) & 255) / 255;
+    const g = ((hex >> 8) & 255) / 255;
+    const b = (hex & 255) / 255;
+    const grad = ctx.createLinearGradient(0, 0, w, 0);
+    grad.addColorStop(0, `rgba(${(r * 140) | 0},${(g * 140) | 0},${(b * 140) | 0},0.12)`);
+    grad.addColorStop(0.5, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, `rgba(${(r * 255) | 0},${(g * 255) | 0},${(b * 255) | 0},0.08)`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+  }
   if (result) {
     const x = w / 2;
     const y = h / 2;
@@ -271,10 +282,10 @@ function easeOutCubic(t) {
 function animateReveal(now) {
   const elapsed = now - animStartTime;
   const t = Math.min(elapsed / ANIM_DURATION_MS, 1);
-  const eased = easeOutCubic(t);
-  sphere.rotation.x = 0;
-  sphere.rotation.z = 0;
-  sphere.rotation.y = eased * (Math.PI + ROTATION_Y_TEXT_FACING);
+  const spinY = 2 * Math.PI + (Math.PI + ROTATION_Y_TEXT_FACING);
+  sphere.rotation.x = t * 2 * Math.PI;
+  sphere.rotation.y = t * spinY;
+  sphere.rotation.z = t * 2 * Math.PI;
 
   if (t < 1) {
     requestAnimationFrame(animateReveal);

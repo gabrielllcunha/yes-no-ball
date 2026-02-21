@@ -16,6 +16,7 @@ const THEMES = {
 let scene, camera, renderer, sphere, raycaster, mouse;
 let textureCanvas, textureContext, canvasTexture;
 let bumpCanvas, bumpContext, bumpTexture;
+let textSprite, textSpriteCanvas, textSpriteTexture;
 let isAnimating = false;
 let isHovering = false;
 let animStartTime = 0;
@@ -35,7 +36,7 @@ function createTextTexture() {
   return canvasTexture;
 }
 
-function updateColorMap(sphereColorHex) {
+function updateColorMap(sphereColorHex, result) {
   const ctx = textureContext;
   const w = TEXTURE_SIZE;
   const h = TEXTURE_SIZE;
@@ -46,6 +47,24 @@ function updateColorMap(sphereColorHex) {
   const hex = sphereColorHex != null ? sphereColorHex : THEMES.idle.sphere;
   ctx.fillStyle = '#' + hex.toString(16).padStart(6, '0');
   ctx.fillRect(0, 0, w, h);
+  if (result) {
+    const x = w / 2;
+    const y = h / 2;
+    const fontSize = Math.floor(TEXTURE_SIZE * 0.28);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold ' + fontSize + 'px "DM Sans", system-ui, sans-serif';
+    ctx.translate(x, y);
+    ctx.scale(0.5, 1);
+    ctx.translate(-x, -y);
+    ctx.strokeStyle = '#111';
+    ctx.lineWidth = 12;
+    ctx.lineJoin = 'round';
+    ctx.miterLimit = 2;
+    ctx.strokeText(result, x, y);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(result, x, y);
+  }
   ctx.restore();
   canvasTexture.needsUpdate = true;
 }
@@ -81,7 +100,7 @@ function updateBumpMap(result) {
   const fontSize = Math.floor(TEXTURE_SIZE * 0.26);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = 'bold ' + fontSize + 'px system-ui, sans-serif';
+  ctx.font = 'bold ' + fontSize + 'px "DM Sans", system-ui, sans-serif';
   ctx.translate(x, y);
   ctx.scale(0.5, 1);
   ctx.translate(-x, -y);
@@ -95,15 +114,69 @@ function updateBumpMap(result) {
   bumpTexture.needsUpdate = true;
 }
 
+function createTextSprite() {
+  const W = 512;
+  const H = 256;
+  textSpriteCanvas = document.createElement('canvas');
+  textSpriteCanvas.width = W;
+  textSpriteCanvas.height = H;
+  const ctx = textSpriteCanvas.getContext('2d');
+  ctx.fillStyle = 'rgba(0,0,0,0)';
+  ctx.fillRect(0, 0, W, H);
+  textSpriteTexture = new THREE.CanvasTexture(textSpriteCanvas);
+  textSpriteTexture.colorSpace = THREE.SRGBColorSpace;
+  const material = new THREE.SpriteMaterial({
+    map: textSpriteTexture,
+    transparent: true,
+    depthWrite: false,
+  });
+  textSprite = new THREE.Sprite(material);
+  textSprite.position.set(-(SPHERE_RADIUS + 0.02), 0, 0);
+  textSprite.scale.set(1.1, 0.45, 1);
+  textSprite.visible = false;
+  sphere.add(textSprite);
+}
+
+function darkerHex(hex, factor) {
+  const r = Math.floor(((hex >> 16) & 255) * factor);
+  const g = Math.floor(((hex >> 8) & 255) * factor);
+  const b = Math.floor((hex & 255) * factor);
+  return '#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('');
+}
+
+function updateTextSprite(result, sphereColorHex) {
+  if (!textSprite || !textSpriteCanvas) return;
+  const ctx = textSpriteCanvas.getContext('2d');
+  const W = textSpriteCanvas.width;
+  const H = textSpriteCanvas.height;
+  ctx.clearRect(0, 0, W, H);
+  if (!result) {
+    textSprite.visible = false;
+    textSpriteTexture.needsUpdate = true;
+    return;
+  }
+  const x = W / 2;
+  const y = H / 2;
+  const fontSize = 120;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold ' + fontSize + 'px "DM Sans", system-ui, sans-serif';
+  ctx.fillStyle = sphereColorHex != null ? darkerHex(sphereColorHex, 0.5) : '#333';
+  ctx.fillText(result, x, y);
+  textSpriteTexture.needsUpdate = true;
+  textSprite.visible = true;
+}
+
 function applyTheme(result) {
   const key = result || 'idle';
   const theme = THEMES[key];
   scene.background.setHex(theme.background);
   document.body.style.background = '#' + theme.background.toString(16).padStart(6, '0');
   sphere.material.color.setHex(0xffffff);
-  updateColorMap(theme.sphere);
   const textToShow = key === 'YES' || key === 'NO' ? key : null;
+  updateColorMap(theme.sphere, textToShow);
   updateBumpMap(textToShow);
+  updateTextSprite(textToShow, theme.sphere);
 }
 
 function initScene() {
@@ -152,6 +225,7 @@ function createSphere() {
   sphere = new THREE.Mesh(geometry, material);
   sphere.userData.baseScale = BASE_SCALE;
   scene.add(sphere);
+  createTextSprite();
 }
 
 function initInteraction(container) {
@@ -180,8 +254,10 @@ function initInteraction(container) {
 function startRevealAnimation() {
   isAnimating = true;
   animStartTime = performance.now();
+  applyTheme('idle');
   const result = Math.random() < 0.5 ? 'YES' : 'NO';
   currentResult = result;
+  updateTextSprite(null);
   updateColorMap(THEMES.idle.sphere);
   updateBumpMap(null);
   sphere.rotation.set(0, 0, 0);

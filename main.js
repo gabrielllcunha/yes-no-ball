@@ -8,9 +8,9 @@ const HOVER_SCALE = 1.08;
 const BASE_SCALE = 1;
 const ROTATION_Y_TEXT_FACING = -Math.PI / 2;
 const THEMES = {
-  idle: { background: 0xe8eaf0, sphere: 0xd8dce4, text: null },
-  YES: { background: 0xd4edda, sphere: 0x8bc99a, text: '#1e6b2e' },
-  NO: { background: 0xffe8e4, sphere: 0xe8a090, text: '#a63d2e' },
+  idle: { background: 0xeef0f5, sphere: 0xc4c9d4, text: null },
+  YES: { background: 0xdcfce7, sphere: 0x22c55e, text: '#166534' },
+  NO: { background: 0xfee2e2, sphere: 0xef4444, text: '#991b1b' },
 };
 
 let scene, camera, renderer, sphere, raycaster, mouse;

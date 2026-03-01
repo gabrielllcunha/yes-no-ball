@@ -8,10 +8,10 @@ A ball made with [ThreeJS](https://threejs.org/) that generates a random value (
 
 ```sh
 # install dependencies
-$ yarn
+$ npm i
 
 # run the project
-$ yarn dev
+$ npm run dev
 ```
 
 ## Contributing

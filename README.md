@@ -4,6 +4,12 @@
 
 A ball made with [ThreeJS](https://threejs.org/) that generates a random value (Yes or No) when clicked.
 
+## ⚡ Techs
+
+- **[React](https://react.dev/)** – UI
+- **[Three.js](https://threejs.org/)** – 3D graphics and WebGL
+- **[Vite](https://vitejs.dev/)** – Build tool and dev server
+
 ## Getting Started
 
 ```sh

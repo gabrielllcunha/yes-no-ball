@@ -1,4 +1,5 @@
 module.exports = {
-    assetsDir: 'public',
-  };
+  base: '/yes-no-ball/',
+  assetsDir: 'public',
+};
   
